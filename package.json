@@ -1,0 +1,24 @@
+{
+  "name": "split-email-parser",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "engines": {
+    "node": ">=16"
+  },
+  "scripts": {
+    "start": "sudo node --env-file=.env email-server.js"
+  },
+  "type": "module",
+  "dependencies": {
+    "abort-controller": "^3.0.0",
+    "mailparser": "^3.6.5",
+    "mongodb": "^6.3.0",
+    "mongoose": "^7.6.3",
+    "openai": "^4.24.1",
+    "smtp-server": "^3.13.0"
+  }
+}
