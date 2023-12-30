@@ -10,15 +10,21 @@
     "node": ">=16"
   },
   "scripts": {
-    "start": "sudo node --env-file=.env email-server.js"
+    "start-email": "sudo nodemon --env-file=.env email-server.js",
+    "start-api": "nodemon router.js"
   },
   "type": "module",
   "dependencies": {
     "abort-controller": "^3.0.0",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
     "mailparser": "^3.6.5",
     "mongodb": "^6.3.0",
     "mongoose": "^7.6.3",
     "openai": "^4.24.1",
     "smtp-server": "^3.13.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
   }
 }
