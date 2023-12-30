@@ -3,7 +3,7 @@ import { simpleParser } from 'mailparser'
 import { MongoClient } from 'mongodb'
 import OpenAI from 'openai'
 
-async function save(data) {
+async function saveToDatabase(record) {
   const username = encodeURIComponent(process.env.MONGODB_USERNAME)
   const password = encodeURIComponent(process.env.MONGODB_PASSWORD)
 
@@ -13,7 +13,7 @@ async function save(data) {
     const database = client.db('share-the-pie')
     const collection = database.collection('receipts')
     
-    const result = await collection.insertOne(data)
+    const result = await collection.insertOne(record)
 
     console.log(`Record saved with id ${result.insertedId}`)
   } finally {
@@ -21,38 +21,7 @@ async function save(data) {
   }
 }
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-})
-
-const server = new SMTPServer({
-  onData(stream, session, callback) {
-    simpleParser(stream, {}, async (err, emailData) => {
-      if (err) { console.log('error: ' , err) }
-
-      let textFromGPT = await parseWithGPT(emailData.textAsHtml)
-      let jsonFromGPT = JSON.parse(textFromGPT)
-
-      let record = {
-        receipt: {
-          original: emailData,
-          parsed: jsonFromGPT
-        },
-        groupId: emailData.to.text.replace(`@${process.env.DOMAIN_NAME}`, '')
-      }
-
-      await save(record).catch(console.dir)
-
-      stream.on('end', callback)
-    })
-
-  },
-  disabledCommands: ['AUTH']
-})
-
-server.listen(process.env.SERVER_PORT, process.env.SERVER_IP, () => {
-  console.log(`Server started on ${process.env.SERVER_IP} at port ${process.env.SERVER_PORT}\n\nListening for emails sent to *@${process.env.DOMAIN_NAME}`);
-})
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
 async function parseWithGPT(emailData) {
   const completion = await openai.chat.completions.create({
@@ -97,3 +66,32 @@ async function parseWithGPT(emailData) {
 
   return completion.choices[0].message.content
 }
+
+const server = new SMTPServer({
+  onData(stream, session, callback) {
+    simpleParser(stream, {}, async (err, emailData) => {
+      if (err) { console.log('error: ' , err) }
+
+      let textFromGPT = await parseWithGPT(emailData.textAsHtml)
+      let jsonFromGPT = JSON.parse(textFromGPT)
+
+      let record = {
+        receipt: {
+          original: emailData,
+          parsed: jsonFromGPT
+        },
+        groupId: emailData.to.text.replace(`@${process.env.DOMAIN_NAME}`, '')
+      }
+
+      await saveToDatabase(record).catch(console.dir)
+
+      stream.on('end', callback)
+    })
+
+  },
+  disabledCommands: ['AUTH']
+})
+
+server.listen(process.env.SERVER_PORT, process.env.SERVER_IP, () => {
+  console.log(`Server started on ${process.env.SERVER_IP} at port ${process.env.SERVER_PORT}\n\nListening for emails sent to *@${process.env.DOMAIN_NAME}`);
+})
