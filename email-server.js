@@ -2,6 +2,9 @@ import { SMTPServer } from 'smtp-server'
 import { simpleParser } from 'mailparser'
 import { MongoClient } from 'mongodb'
 import OpenAI from 'openai'
+import dotenv from 'dotenv'
+
+dotenv.config()
 
 async function saveToDatabase(record) {
   const username = encodeURIComponent(process.env.MONGODB_USERNAME)
@@ -39,15 +42,15 @@ async function parseWithGPT(emailData) {
             },
             "items": [
               {
-                "item": "ITEM_NAME",
+                "name": "ITEM_NAME",
                 "price": 0.00
               },
               {
-                "item": "ITEM_NAME",
+                "name": "ITEM_NAME",
                 "price": 0.00
               },
               {
-                "item": "ITEM_NAME",
+                "name": "ITEM_NAME",
                 "price": 0.00
               }
             ],
