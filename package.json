@@ -10,7 +10,7 @@
     "node": ">=16"
   },
   "scripts": {
-    "start-email": "sudo nodemon email-server.js",
+    "start-email": "sudo node email-server.js",
     "start-api": "nodemon router.js"
   },
   "type": "module",
