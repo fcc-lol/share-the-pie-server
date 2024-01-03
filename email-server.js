@@ -75,7 +75,7 @@ const server = new SMTPServer({
     simpleParser(stream, {}, async (err, emailData) => {
       if (err) { console.log('error: ' , err) }
 
-      let textFromGPT = await parseWithGPT(emailData.textAsHtml)
+      let textFromGPT = await parseWithGPT(emailData.html)
       let jsonFromGPT = JSON.parse(textFromGPT)
 
       let record = {
