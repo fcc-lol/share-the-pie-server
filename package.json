@@ -11,18 +11,24 @@
   },
   "scripts": {
     "start-email": "sudo node email-server.js",
-    "start-api": "nodemon router.js"
+    "start-api": "nodemon api-server.js"
   },
   "type": "module",
   "dependencies": {
     "abort-controller": "^3.0.0",
+    "body-parser": "^1.20.2",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
+    "fs": "^0.0.1-security",
+    "https": "^1.0.0",
     "mailparser": "^3.6.5",
     "mongodb": "^6.3.0",
     "mongoose": "^7.6.3",
+    "node-fetch": "^3.3.2",
     "openai": "^4.24.1",
+    "qrcode": "^1.5.3",
+    "request": "^2.88.2",
     "smtp-server": "^3.13.0",
     "twilio": "^4.20.0"
   },
