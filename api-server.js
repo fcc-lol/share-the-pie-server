@@ -11,9 +11,6 @@ import QRCode from 'qrcode'
 
 dotenv.config()
 
-const key = fs.readFileSync(process.env.LOCAL_KEY)
-const cert = fs.readFileSync(process.env.LOCAL_CERT)
-
 async function readFromDatabase(id) {
   const client = new MongoClient(`mongodb://${encodeURIComponent(process.env.MONGODB_USERNAME)}:${encodeURIComponent(process.env.MONGODB_PASSWORD)}@${process.env.MONGODB_SERVER}`)
 
@@ -143,12 +140,27 @@ function generateDataString(parsedReceipt) {
   return dataString
 }
 
+let key, cert, ca
+
+if (process.env.SERVER_IP === 'localhost') {  
+    key = fs.readFileSync(process.env.LOCAL_KEY)
+    cert = fs.readFileSync(process.env.LOCAL_CERT)
+} else {
+    key = fs.readFileSync(`/etc/letsencrypt/live/${process.env.DOMAIN_NAME}/privkey.pem`, 'utf8')
+    cert = fs.readFileSync(`/etc/letsencrypt/live/${process.env.DOMAIN_NAME}/cert.pem`, 'utf8')
+    ca = fs.readFileSync(`/etc/letsencrypt/live/${process.env.DOMAIN_NAME}/chain.pem`, 'utf8')
+}
+
 const app = express()
-const server = https.createServer({key: key, cert: cert }, app)
+const server = https.createServer({ key, cert, ca }, app)
 const port = process.env.SERVER_NODE_PORT
 
 app.use(bodyParser.json({ limit: '10000kb' }))
 app.use(cors())
+
+server.listen(port, () => {
+  console.log(`Listening on port ${port}`)
+})
 
 app.get('/view/:id', async (req, res) => {
   const data = await readFromDatabase(req.params.id).catch(console.dir)
@@ -227,8 +239,4 @@ app.get('/parse', async (req, res) => {
   } else {
     res.sendStatus(404)
   }
-})
-
-server.listen(port, () => {
-  console.log(`Listening on port ${port}`)
 })
