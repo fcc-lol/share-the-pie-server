@@ -46,13 +46,12 @@ if (process.env.SERVER_IP === 'localhost') {
 
 const app = express()
 const server = https.createServer({ key, cert, ca }, app)
-const port = process.env.SERVER_NODE_PORT
 
 app.use(bodyParser.json({ limit: '10000kb' }))
 app.use(cors())
 
-server.listen(port, () => {
-  console.log(`Listening on port ${port}`)
+server.listen(process.env.SERVER_NODE_PORT, () => {
+  console.log(`Listening on port ${process.env.SERVER_NODE_PORT}`)
 })
 
 app.get('/view/:id', async (req, res) => {
@@ -91,15 +90,16 @@ app.get('/status', async (req, res) => {
   res.send('Success')
 })
 
-// app.post('/parse', async (req, res) => {
-app.get('/parse', async (req, res) => {
+app.post('/parse', async (req, res) => {
+// app.get('/parse', async (req, res) => {
+  let imageData = req.body.image
   let parsedReceipt
   const receiptParsingMode = process.env.RECEIPT_PARSING_MODE
   
   if (receiptParsingMode === 'GPT') {
-    parsedReceipt = await parseWithGPT(req.body.data)
+    parsedReceipt = await parseWithGPT(imageData)
   } else if (receiptParsingMode === 'VERYFI') {
-    parsedReceipt = await parseWithVeryfi(req.body.data)
+    parsedReceipt = await parseWithVeryfi(imageData)
   } else if (receiptParsingMode === 'SAMPLE') {
     const sampleData = readFileSync('./samples/pusu.json')
     parsedReceipt = JSON.parse(sampleData)
@@ -109,7 +109,10 @@ app.get('/parse', async (req, res) => {
     let dataStorageMode = process.env.DATA_STORAGE_MODE
 
     if (dataStorageMode === 'DATABASE') {
-      const insertedId = await saveToDatabase(parsedReceipt).catch(console.dir)
+      const insertedId = await saveToDatabase({
+        parsed: parsedReceipt,
+        original: imageData
+      }).catch(console.dir)
 
       res.send({
         sessionId: insertedId
