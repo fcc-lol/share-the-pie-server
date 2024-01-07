@@ -96,5 +96,5 @@ const server = new SMTPServer({
 })
 
 server.listen(process.env.SERVER_SMTP_PORT, process.env.SERVER_IP, () => {
-  console.log(`Server started on ${process.env.SERVER_IP} at port ${process.env.SERVER_SMTP_PORT}\n\nListening for emails sent to *@${process.env.DOMAIN_NAME}`);
+  console.log(`Server started on ${process.env.SERVER_IP} at port ${process.env.SERVER_SMTP_PORT}\n\nListening for emails sent to *@${process.env.DOMAIN_NAME}`)
 })
