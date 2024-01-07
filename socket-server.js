@@ -28,7 +28,7 @@ io.on('connection', (socket) => {
   socket.on('startSession', async (data) => {
     const sessionId = data.sessionId
     const url = `${process.env.DATABASE_VIEWER_ENDPOINT}/${sessionId}`
-    const qrCode = await QRCode.toDataURL(url)
+    const qrCode = await QRCode.toDataURL(url, { width: 800 })
 
     socket.join(sessionId)
     io.to(sessionId).emit('sessionStarted', { sessionId, qrCode })

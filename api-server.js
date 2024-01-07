@@ -111,7 +111,9 @@ app.get('/parse', async (req, res) => {
     if (dataStorageMode === 'DATABASE') {
       const insertedId = await saveToDatabase(parsedReceipt).catch(console.dir)
 
-      res.send(insertedId)
+      res.send({
+        sessionId: insertedId
+      })
     } else if (dataStorageMode === 'URL') {
       const dataString = generateDataString(parsedReceipt)
 
