@@ -6,7 +6,7 @@ import dotenv from 'dotenv'
 import QRCode from 'qrcode'
 import fs, { readFileSync } from 'fs'
 import { getSessionMembersData } from './functions/session.js'
-import { readFromDatabase, saveToDatabase } from './functions/database.js'
+import { readFromDatabase, saveToDatabase, setItemStatuses } from './functions/database.js'
 
 dotenv.config()
 
@@ -54,6 +54,30 @@ io.on('connection', (socket) => {
 
       io.to(sessionId).emit('sessionMembersChanged', { sessionMembers: sessionMembersData })
     }
+  })
+
+  socket.on('setItemChecked', async (data) => {
+    const { sessionId, itemId } = data
+
+    const result = await setItemStatuses(sessionId, itemId, { isChecked: true, checkedBy: socket.id })
+
+    io.to(sessionId).emit('itemsStatusChanged')
+  })
+
+  socket.on('setItemUnchecked', async (data) => {
+    const { sessionId, itemId } = data
+
+    const result = await setItemStatuses(sessionId, itemId, { isChecked: false, checkedBy: null })
+
+    io.to(sessionId).emit('itemsStatusChanged')
+  })
+
+  socket.on('setItemsPaid', async (data) => {
+    const { sessionId, itemIds } = data
+
+    const result = await setItemStatuses(sessionId, itemIds, { isPaid: true, paidBy: socket.id })
+
+    io.to(sessionId).emit('itemsStatusChanged')
   })
 })
 

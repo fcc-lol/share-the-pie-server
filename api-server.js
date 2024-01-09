@@ -9,7 +9,7 @@ import fs, { readFileSync } from 'fs'
 import https from 'https'
 import QRCode from 'qrcode'
 
-import { readFromDatabase, saveToDatabase } from './functions/database.js'
+import { readFromDatabase, saveToDatabase, setItemStatus } from './functions/database.js'
 import { parseWithGPT, parseWithVeryfi } from './functions/parse-receipt.js'
 
 dotenv.config()
@@ -109,6 +109,16 @@ app.post('/parse', async (req, res) => {
     let dataStorageMode = process.env.DATA_STORAGE_MODE
 
     if (dataStorageMode === 'DATABASE') {
+      parsedReceipt.line_items = parsedReceipt.line_items.map(line_item => ({
+        ...line_item,
+        status: {
+          isChecked: false,
+          checkedBy: null,
+          isPaid: false,
+          paidBy: null
+        }
+      }))
+
       const insertedId = await saveToDatabase({
         parsed: parsedReceipt,
         original: imageData
