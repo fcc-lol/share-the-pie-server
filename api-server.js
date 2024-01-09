@@ -54,7 +54,7 @@ server.listen(process.env.SERVER_NODE_PORT, () => {
   console.log(`Listening on port ${process.env.SERVER_NODE_PORT}`)
 })
 
-app.get('/view/:id', async (req, res) => {
+app.get('/getReceiptData/:id', async (req, res) => {
   const data = await readFromDatabase(req.params.id).catch(console.dir)
 
   if (data) {
@@ -90,7 +90,7 @@ app.get('/status', async (req, res) => {
   res.send('Success')
 })
 
-app.post('/parse', async (req, res) => {
+app.post('/parseReceiptImage', async (req, res) => {
 // app.get('/parse', async (req, res) => {
   let imageData = req.body.image
   let parsedReceipt
