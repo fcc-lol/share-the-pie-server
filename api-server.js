@@ -153,7 +153,8 @@ app.post('/setInitiatorData', async (req, res) => {
   if (data) {
     try {
       setInitiatorData(req.body)
-      res.sendStatus(200)
+      res.send(req.body)
+      // res.sendStatus(200)
     } catch (err) {
       console.log(err.stack)
       res.sendStatus(500)
