@@ -63,3 +63,24 @@ export async function setItemStatuses(sessionId, itemIds, status) {
     await client.close()
   }
 }
+
+export async function setInitiatorData(data) {
+  const sessionId = data.sessionId
+  const client = new MongoClient(`mongodb://${encodeURIComponent(process.env.MONGODB_USERNAME)}:${encodeURIComponent(process.env.MONGODB_PASSWORD)}@${process.env.MONGODB_SERVER}`)
+
+  try {
+    const database = client.db(process.env.MONGODB_DATABASE)
+    const collection = database.collection(process.env.MONGODB_COLLECTION)
+    const result = await collection.updateOne(
+      { _id: new ObjectId(sessionId) },
+      { $set: {
+        'initiator.handles': data.handles,
+        'initiator.humanName': data.humanName
+      } }
+    )
+  } catch (err) {
+    console.log(err.stack)
+  } finally {
+    await client.close()
+  }
+}

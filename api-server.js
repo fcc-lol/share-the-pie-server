@@ -9,7 +9,7 @@ import fs, { readFileSync } from 'fs'
 import https from 'https'
 import QRCode from 'qrcode'
 
-import { readFromDatabase, saveToDatabase } from './functions/database.js'
+import { readFromDatabase, saveToDatabase, setInitiatorData } from './functions/database.js'
 import { parseWithGPT, parseWithVeryfi } from './functions/parse-receipt.js'
 
 dotenv.config()
@@ -121,7 +121,11 @@ app.post('/parseReceiptImage', async (req, res) => {
 
       const insertedId = await saveToDatabase({
         parsed: parsedReceipt,
-        original: imageData
+        original: imageData,
+        initiator: {
+          handles: [],
+          humanName: null
+        }
       }).catch(console.dir)
 
       res.send({
@@ -137,6 +141,22 @@ app.post('/parseReceiptImage', async (req, res) => {
         url,
         qr
       })
+    }
+  } else {
+    res.sendStatus(404)
+  }
+})
+
+app.post('/setInitiatorData', async (req, res) => {
+  const data = req.body
+
+  if (data) {
+    try {
+      setInitiatorData(req.body)
+      res.sendStatus(200)
+    } catch (err) {
+      console.log(err.stack)
+      res.sendStatus(500)
     }
   } else {
     res.sendStatus(404)
