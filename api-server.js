@@ -9,7 +9,7 @@ import fs, { readFileSync } from 'fs'
 import https from 'https'
 import QRCode from 'qrcode'
 
-import { readFromDatabase, saveToDatabase, setItemStatus } from './functions/database.js'
+import { readFromDatabase, saveToDatabase } from './functions/database.js'
 import { parseWithGPT, parseWithVeryfi } from './functions/parse-receipt.js'
 
 dotenv.config()
