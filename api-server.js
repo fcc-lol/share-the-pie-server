@@ -123,7 +123,7 @@ app.post('/parseReceiptImage', async (req, res) => {
         parsed: parsedReceipt,
         original: imageData,
         initiator: {
-          handles: [],
+          handles: {},
           humanName: null
         }
       }).catch(console.dir)

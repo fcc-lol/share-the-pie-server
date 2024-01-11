@@ -74,7 +74,8 @@ export async function setInitiatorData(data) {
     const result = await collection.updateOne(
       { _id: new ObjectId(sessionId) },
       { $set: {
-        'initiator.handles': data.handles,
+        'initiator.handles.cashTag': data.handles.cashTag,
+        'initiator.handles.venmoHandle': data.handles.venmoHandle,
         'initiator.humanName': data.humanName
       } }
     )
