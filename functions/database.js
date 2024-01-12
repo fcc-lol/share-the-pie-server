@@ -44,7 +44,7 @@ export async function setItemStatuses(sessionId, itemIds, status) {
   let setStatus = {}
 
   for (const key in status) {
-    setStatus[[`parsed.line_items.$[match].status.${key}`]] = status[key]
+    setStatus[[`parsed.line_items.$[match].${key}`]] = status[key]
   }
 
   try {

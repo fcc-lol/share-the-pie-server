@@ -27,11 +27,9 @@ const sessionCreators = {}
 io.on('connection', (socket) => {
   socket.on('startSession', async (data) => {
     const sessionId = data.sessionId
-    const url = `${process.env.DATABASE_VIEWER_ENDPOINT}/${sessionId}`
-    const qrCode = await QRCode.toDataURL(url, { width: 800 })
 
     socket.join(sessionId)
-    io.to(sessionId).emit('sessionStarted', { sessionId, qrCode })
+    io.to(sessionId).emit('sessionStarted', { sessionId })
 
     sessionCreators[sessionId] = socket.id
   })
@@ -56,29 +54,40 @@ io.on('connection', (socket) => {
     }
   })
 
-  socket.on('setItemChecked', async (data) => {
+  socket.on('setItemChecked', (data) => {
     const { sessionId, itemId } = data
 
-    const result = await setItemStatuses(sessionId, itemId, { isChecked: true, checkedBy: socket.id })
+    io.to(sessionId).emit('itemsStatusChanged', { itemId, isChecked: true, checkedBy: socket.id })
 
-    io.to(sessionId).emit('itemsStatusChanged')
+    setItemStatuses(sessionId, itemId, { isChecked: true, checkedBy: socket.id })
   })
 
-  socket.on('setItemUnchecked', async (data) => {
+  socket.on('setItemUnchecked', (data) => {
     const { sessionId, itemId } = data
 
-    const result = await setItemStatuses(sessionId, itemId, { isChecked: false, checkedBy: null })
+    io.to(sessionId).emit('itemsStatusChanged', { itemId, isChecked: false, checkedBy: null })
 
-    io.to(sessionId).emit('itemsStatusChanged')
+    setItemStatuses(sessionId, itemId, { isChecked: false, checkedBy: null })
   })
 
-  socket.on('setItemsPaid', async (data) => {
-    const { sessionId, itemIds } = data
+  socket.on('setMyCheckedItemsUnchecked', (data) => {
+    const { sessionId, myCheckedItems } = data
 
-    const result = await setItemStatuses(sessionId, itemIds, { isPaid: true, paidBy: socket.id })
+    myCheckedItems.map((item) => {
+      const itemId = item.id
+      io.to(sessionId).emit('itemsStatusChanged', { itemId, isChecked: false, checkedBy: null })
 
-    io.to(sessionId).emit('itemsStatusChanged')
+      setItemStatuses(sessionId, itemId, { isChecked: false, checkedBy: null })
+    })
   })
+
+  // socket.on('setItemsPaid', async (data) => {
+  //   const { sessionId, itemIds } = data
+
+  //   const result = await setItemStatuses(sessionId, itemIds, { isPaid: true, paidBy: socket.id })
+
+  //   io.to(sessionId).emit('itemsStatusChanged')
+  // })
 })
 
 server.listen(process.env.SERVER_SOCKET_PORT, () => {

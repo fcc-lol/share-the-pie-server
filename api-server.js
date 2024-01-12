@@ -54,31 +54,37 @@ server.listen(process.env.SERVER_NODE_PORT, () => {
   console.log(`Listening on port ${process.env.SERVER_NODE_PORT}`)
 })
 
-app.get('/getReceiptData/:id', async (req, res) => {
-  const data = await readFromDatabase(req.params.id).catch(console.dir)
+app.post('/getReceiptData', async (req, res) => {
+  const sessionId = req.body.sessionId
+  const data = await readFromDatabase(sessionId).catch(console.dir)
+  const parsedReceipt = data.parsed
 
   if (data) {
     res.send({
       merchant: {
-        name: data.vendor.name,
-        type: data.vendor.type,
-        address: data.vendor.address
+        name: parsedReceipt.vendor.name,
+        type: parsedReceipt.vendor.type,
+        address: parsedReceipt.vendor.address
       },
-      items: data.line_items.map((line_item) => {
+      items: parsedReceipt.line_items.map((line_item) => {
         if (line_item.total) {
           return {
             id: line_item.id,
             description: line_item.description,
             quanity: line_item.quanity,
-            price: line_item.total
+            price: line_item.total,
+            isChecked: line_item.isChecked,
+            checkedBy: line_item.checkedBy,
+            isPaid: line_item.isPaid,
+            paidBy: line_item.paidBy
           }
         }
       }).filter(x => x),
       transaction: {
-        items: data.subtotal,
-        tip: data.tip,
-        tax: data.tax,
-        total: data.total,
+        items: parsedReceipt.subtotal,
+        tip: parsedReceipt.tip,
+        tax: parsedReceipt.tax,
+        total: parsedReceipt.total,
       }
     })
   } else {
@@ -111,12 +117,10 @@ app.post('/parseReceiptImage', async (req, res) => {
     if (dataStorageMode === 'DATABASE') {
       parsedReceipt.line_items = parsedReceipt.line_items.map(line_item => ({
         ...line_item,
-        status: {
-          isChecked: false,
-          checkedBy: null,
-          isPaid: false,
-          paidBy: null
-        }
+        isChecked: false,
+        checkedBy: null,
+        isPaid: false,
+        paidBy: null
       }))
 
       const insertedId = await saveToDatabase({
@@ -159,6 +163,23 @@ app.post('/setInitiatorData', async (req, res) => {
       console.log(err.stack)
       res.sendStatus(500)
     }
+  } else {
+    res.sendStatus(404)
+  }
+})
+
+app.post('/generateQrCode', async (req, res) => {
+  const sessionId = req.body.sessionId
+  const data = await readFromDatabase(sessionId).catch(console.dir)
+
+  if (data) {
+    const url = `${process.env.DATABASE_VIEWER_ENDPOINT}?sessionId=${sessionId}`
+    const qrCode = await QRCode.toDataURL(url, { width: 800 })
+
+    res.send({
+      url,
+      qrCode
+    })
   } else {
     res.sendStatus(404)
   }
