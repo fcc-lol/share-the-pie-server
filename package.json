@@ -10,11 +10,11 @@
     "node": ">=16"
   },
   "scripts": {
-    "share-the-pie-server:email-dev": "sudo node email-server.js",
-    "share-the-pie-server:api-prod": "node api-server.js",
-    "share-the-pie-server:api-dev": "nodemon api-server.js",
-    "share-the-pie-server:socket-prod": "node socket-server.js",
-    "share-the-pie-server:socket-dev": "nodemon socket-server.js"
+    "email-dev": "sudo node ../share-the-pie-server/email-server.js",
+    "api-prod": "node ../share-the-pie-server/api-server.js",
+    "api-dev": "nodemon ../share-the-pie-server/api-server.js",
+    "socket-prod": "node ../share-the-pie-server/socket-server.js",
+    "socket-dev": "nodemon ../share-the-pie-server/socket-server.js"
   },
   "type": "module",
   "dependencies": {
