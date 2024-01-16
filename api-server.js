@@ -93,7 +93,7 @@ app.post('/getReceiptData', async (req, res) => {
 })
 
 app.get('/status', async (req, res) => {
-  res.send('Success')
+  res.send('Test 123')
 })
 
 app.post('/parseReceiptImage', async (req, res) => {
