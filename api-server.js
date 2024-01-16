@@ -14,8 +14,6 @@ import { parseWithGPT, parseWithVeryfi } from './functions/parse-receipt.js'
 
 dotenv.config()
 
-// test deploy 3
-
 function generateDataString(parsedReceipt) {
   let dataArray = []
 
