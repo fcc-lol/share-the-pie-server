@@ -28,7 +28,7 @@ export async function saveToDatabase(data) {
   }
 }
 
-export async function setItemStatuses(sessionId, itemIds, status) {
+export async function setItemStatusesByItemId(sessionId, itemIds, status) {
   const client = new MongoClient(`mongodb://${encodeURIComponent(process.env.MONGODB_USERNAME)}:${encodeURIComponent(process.env.MONGODB_PASSWORD)}@${process.env.MONGODB_SERVER}`)
 
   let itemsFilter = []
@@ -54,6 +54,42 @@ export async function setItemStatuses(sessionId, itemIds, status) {
       { _id: new ObjectId(sessionId) },
       { $set: setStatus },
       { arrayFilters: [ { $or: itemsFilter } ] }
+    )
+
+    return result
+  } catch (err) {
+    console.log(err.stack)
+  } finally {
+    await client.close()
+  }
+}
+
+export async function setItemStatusesBySocketId(sessionId, socketIds, status) {
+  const client = new MongoClient(`mongodb://${encodeURIComponent(process.env.MONGODB_USERNAME)}:${encodeURIComponent(process.env.MONGODB_PASSWORD)}@${process.env.MONGODB_SERVER}`)
+
+  let socketIdsFilter = []
+
+  if (typeof socketIds === 'object') {
+    for (const socketId of socketIds) {
+      socketIdsFilter.push({ "match.checkedBy": socketId })
+    }
+  } else {
+    socketIdsFilter.push({ "match.checkedBy": socketIds })
+  }
+
+  let setStatus = {}
+
+  for (const key in status) {
+    setStatus[[`parsed.line_items.$[match].${key}`]] = status[key]
+  }
+
+  try {
+    const database = client.db(process.env.MONGODB_DATABASE)
+    const collection = database.collection(process.env.MONGODB_COLLECTION)
+    const result = await collection.updateOne(
+      { _id: new ObjectId(sessionId) },
+      { $set: setStatus },
+      { arrayFilters: [ { $or: socketIdsFilter } ] }
     )
 
     return result

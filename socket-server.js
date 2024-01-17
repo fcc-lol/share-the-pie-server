@@ -7,7 +7,7 @@ import QRCode from 'qrcode'
 import fs, { readFileSync } from 'fs'
 import https from 'https'
 import { getSessionMembersData } from './functions/session.js'
-import { readFromDatabase, saveToDatabase, setItemStatuses } from './functions/database.js'
+import { readFromDatabase, saveToDatabase, setItemStatusesByItemId, setItemStatusesBySocketId } from './functions/database.js'
 
 dotenv.config()
 
@@ -63,16 +63,18 @@ io.on('connection', (socket) => {
       const sessionId = [...socket.rooms][1].toString()
       const sessionMembersData = getSessionMembersData(socket, sessionId, sessionCreators, { removeDisconnectingSocket: true })
 
-      io.to(sessionId).emit('sessionMembersChanged', { sessionMembers: sessionMembersData })
+      setItemStatusesBySocketId(sessionId, socket.id, { isChecked: false, checkedBy: null })
+
+      io.to(sessionId).emit('sessionMembersChanged', { sessionMembers: sessionMembersData, memberLeft: socket.id })
     }
   })
 
   socket.on('setItemChecked', (data) => {
-    const { sessionId, itemId } = data
+    const { sessionId, itemId, socketId } = data
 
-    io.to(sessionId).emit('itemsStatusChanged', { itemId, isChecked: true, checkedBy: socket.id })
+    io.to(sessionId).emit('itemsStatusChanged', { itemId, isChecked: true, checkedBy: socketId })
 
-    setItemStatuses(sessionId, itemId, { isChecked: true, checkedBy: socket.id })
+    setItemStatusesByItemId(sessionId, itemId, { isChecked: true, checkedBy: socketId })
   })
 
   socket.on('setItemUnchecked', (data) => {
@@ -80,18 +82,7 @@ io.on('connection', (socket) => {
 
     io.to(sessionId).emit('itemsStatusChanged', { itemId, isChecked: false, checkedBy: null })
 
-    setItemStatuses(sessionId, itemId, { isChecked: false, checkedBy: null })
-  })
-
-  socket.on('setMyCheckedItemsUnchecked', (data) => {
-    const { sessionId, myCheckedItems } = data
-
-    myCheckedItems.map((item) => {
-      const itemId = item.id
-      io.to(sessionId).emit('itemsStatusChanged', { itemId, isChecked: false, checkedBy: null })
-
-      setItemStatuses(sessionId, itemId, { isChecked: false, checkedBy: null })
-    })
+    setItemStatusesByItemId(sessionId, itemId, { isChecked: false, checkedBy: null })
   })
 
   // socket.on('setItemsPaid', async (data) => {
