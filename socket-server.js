@@ -5,13 +5,26 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import QRCode from 'qrcode'
 import fs, { readFileSync } from 'fs'
+import https from 'https'
 import { getSessionMembersData } from './functions/session.js'
 import { readFromDatabase, saveToDatabase, setItemStatuses } from './functions/database.js'
 
 dotenv.config()
 
+let key, cert, ca
+
+if (process.env.SERVER_IP === 'localhost') {  
+    key = fs.readFileSync(process.env.LOCAL_KEY)
+    cert = fs.readFileSync(process.env.LOCAL_CERT)
+} else {
+    key = fs.readFileSync(`/etc/letsencrypt/live/${process.env.DOMAIN_NAME}/privkey.pem`, 'utf8')
+    cert = fs.readFileSync(`/etc/letsencrypt/live/${process.env.DOMAIN_NAME}/cert.pem`, 'utf8')
+    ca = fs.readFileSync(`/etc/letsencrypt/live/${process.env.DOMAIN_NAME}/chain.pem`, 'utf8')
+}
+
 const app = express()
-const server = createServer(app)
+const server = https.createServer({ key, cert, ca }, app)
+
 const io = new Server(server, {
   maxHttpBufferSize: 1e8,
   cors: {
