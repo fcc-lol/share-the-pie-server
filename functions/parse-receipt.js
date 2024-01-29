@@ -8,16 +8,18 @@ export async function parseWithGPT(image) {
           role: "system",
           content: "You are a helpful assistant designed to output JSON.",
         },
-        { role: "user", content: {
-          "type": "image_url", 
-          "image_url": 
+        {
+          role: "user", content: {
+            "type": "image_url",
+            "image_url":
             {
               "url": image
             }
           }
         },
-        { role: "user", content:
-          `{
+        {
+          role: "user", content:
+            `{
               "transaction": {
                 "datetime": "DATE_TIME",
                 "merchant": "MERCHANT_NAME",
