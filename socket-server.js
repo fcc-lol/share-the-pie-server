@@ -153,6 +153,12 @@ io.on("connection", (socket) => {
 
     io.to(sessionId).emit("itemsStatusChanged");
   });
+
+  socket.on("tipAmountChanged", async (data) => {
+    const { sessionId, tip } = data;
+
+    io.to(sessionId).emit("tipAmountChanged", { sessionId, tip });
+  });
 });
 
 server.listen(process.env.SERVER_SOCKET_PORT, () => {

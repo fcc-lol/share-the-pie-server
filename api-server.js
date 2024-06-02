@@ -13,6 +13,7 @@ import {
   readFromDatabase,
   saveToDatabase,
   setInitiatorData,
+  setTipAmount,
 } from "./functions/database.js";
 import { parseWithGPT, parseWithVeryfi } from "./functions/parse-receipt.js";
 
@@ -118,7 +119,6 @@ app.get("/status", async (req, res) => {
 });
 
 app.post("/parseReceiptImage", async (req, res) => {
-  // app.get('/parse', async (req, res) => {
   let imageData = req.body.image;
   let parsedReceipt;
   const receiptParsingMode = process.env.RECEIPT_PARSING_MODE;
@@ -180,7 +180,22 @@ app.post("/setInitiatorData", async (req, res) => {
     try {
       await setInitiatorData(req.body);
       res.send(req.body);
-      // res.sendStatus(200)
+    } catch (err) {
+      console.log(err.stack);
+      res.sendStatus(500);
+    }
+  } else {
+    res.sendStatus(404);
+  }
+});
+
+app.post("/setTipAmount", async (req, res) => {
+  const data = req.body;
+
+  if (data) {
+    try {
+      await setTipAmount(req.body);
+      res.send(req.body);
     } catch (err) {
       console.log(err.stack);
       res.sendStatus(500);
