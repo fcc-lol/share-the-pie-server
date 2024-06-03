@@ -1,5 +1,4 @@
 import express from "express";
-import { createServer } from "http";
 import { Server } from "socket.io";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -8,8 +7,6 @@ import fs, { readFileSync } from "fs";
 import https from "https";
 import { getSessionMembersData } from "./functions/session.js";
 import {
-  readFromDatabase,
-  saveToDatabase,
   setItemStatusesByItemId,
   setItemStatusesBySocketId,
 } from "./functions/database.js";
@@ -146,7 +143,7 @@ io.on("connection", (socket) => {
   socket.on("setMemberToBeSessionCreator", async (data) => {
     const { sessionId, itemIds } = data;
 
-    const result = await setItemStatuses(sessionId, itemIds, {
+    await setItemStatuses(sessionId, itemIds, {
       isPaid: true,
       paidBy: socket.id,
     });
@@ -154,7 +151,7 @@ io.on("connection", (socket) => {
     io.to(sessionId).emit("itemsStatusChanged");
   });
 
-  socket.on("tipAmountChanged", async (data) => {
+  socket.on("tipAmountChanged", (data) => {
     const { sessionId, tip } = data;
 
     io.to(sessionId).emit("tipAmountChanged", { sessionId, tip });
