@@ -75,17 +75,15 @@ server.listen(process.env.SERVER_NODE_PORT, () => {
 app.post("/getReceiptData", async (req, res) => {
   const sessionId = req.body.sessionId;
   const data = await readFromDatabase(sessionId).catch(console.dir);
-  const parsedReceipt = data.parsed;
-  const initiator = data.initiator;
 
   if (data) {
     res.send({
       merchant: {
-        name: parsedReceipt.vendor.name,
-        type: parsedReceipt.vendor.type,
-        address: parsedReceipt.vendor.address,
+        name: data.parsed.vendor.name,
+        type: data.parsed.vendor.type,
+        address: data.parsed.vendor.address,
       },
-      items: parsedReceipt.line_items
+      items: data.parsed.line_items
         .map((line_item) => {
           if (line_item.total) {
             return {
@@ -102,12 +100,13 @@ app.post("/getReceiptData", async (req, res) => {
         })
         .filter((x) => x),
       transaction: {
-        items: parsedReceipt.subtotal,
-        tip: parsedReceipt.tip,
-        tax: parsedReceipt.tax,
-        total: parsedReceipt.total,
+        items: data.parsed.subtotal,
+        tip: data.parsed.tip,
+        tax: data.parsed.tax,
+        total: data.parsed.total,
       },
-      initiator,
+      initiator: data.initiator,
+      isManualTipAmount: data.isManualTipAmount,
     });
   } else {
     res.sendStatus(404);
@@ -152,6 +151,7 @@ app.post("/parseReceiptImage", async (req, res) => {
           venmoHandle: "",
           humanName: "",
         },
+        isManualTipAmount: false,
       }).catch(console.dir);
 
       res.send({

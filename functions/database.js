@@ -172,6 +172,7 @@ export async function setTipAmount(data) {
       {
         $set: {
           "parsed.tip": data.tip,
+          isManualTipAmount: true,
         },
       }
     );
