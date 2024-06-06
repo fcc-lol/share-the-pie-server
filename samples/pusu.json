@@ -1,6 +1,11 @@
 {
   "account_number": null,
-  "bill_to": { "address": null, "name": null, "parsed_address": null, "vat_number": null },
+  "bill_to": {
+    "address": null,
+    "name": null,
+    "parsed_address": null,
+    "vat_number": null
+  },
   "cashback": null,
   "category": "Gifts",
   "created_date": "2024-01-05 21:14:37",
@@ -273,7 +278,7 @@
   "tags": [],
   "tax": 12.68,
   "tax_lines": [],
-  "tip": 31.46,
+  "tip": null,
   "total": 187.14,
   "total_weight": null,
   "tracking_number": null,
