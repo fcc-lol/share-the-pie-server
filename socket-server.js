@@ -91,8 +91,7 @@ io.on("connection", (socket) => {
       );
 
       setItemStatusesBySocketId(sessionId, socket.id, {
-        isChecked: false,
-        checkedBy: null,
+        unCheckedBy: socket.id,
       });
 
       io.to(sessionId).emit("sessionMembersChanged", {
@@ -117,18 +116,36 @@ io.on("connection", (socket) => {
     });
   });
 
+  socket.on("setItemCheckedByMultiple", (data) => {
+    const { sessionId, itemId, socketId } = data;
+
+    io.to(sessionId).emit("itemsStatusChanged", {
+      itemId,
+      isChecked: true,
+      checkedBy: socketId,
+    });
+
+    setItemStatusesBySocketId(
+      sessionId,
+      socketId,
+      {
+        checkedBy: socketId,
+      },
+      itemId
+    );
+  });
+
   socket.on("setItemUnchecked", (data) => {
-    const { sessionId, itemId } = data;
+    const { sessionId, itemId, socketId } = data;
 
     io.to(sessionId).emit("itemsStatusChanged", {
       itemId,
       isChecked: false,
-      checkedBy: null,
     });
 
     setItemStatusesByItemId(sessionId, itemId, {
       isChecked: false,
-      checkedBy: null,
+      unCheckedBy: socketId,
     });
   });
 
