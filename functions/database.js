@@ -82,7 +82,7 @@ export async function setItemStatusesByItemId(sessionId, itemIds, status) {
   }
 }
 
-export async function setItemStatusesBySocketId(sessionId, socketIds, status) {
+export async function clearItemsCheckedBySocketId(sessionId, socketId) {
   const client = new MongoClient(
     `mongodb://${encodeURIComponent(
       process.env.MONGODB_USERNAME
@@ -91,29 +91,13 @@ export async function setItemStatusesBySocketId(sessionId, socketIds, status) {
     }`
   );
 
-  let socketIdsFilter = [];
-
-  if (typeof socketIds === "object") {
-    for (const socketId of socketIds) {
-      socketIdsFilter.push({ "match.checkedBy": socketId });
-    }
-  } else {
-    socketIdsFilter.push({ "match.checkedBy": socketIds });
-  }
-
-  let setStatus = {};
-
-  for (const key in status) {
-    setStatus[[`parsed.line_items.$[match].${key}`]] = status[key];
-  }
-
   try {
     const database = client.db(process.env.MONGODB_DATABASE);
     const collection = database.collection(process.env.MONGODB_COLLECTION);
     const result = await collection.updateOne(
       { _id: new ObjectId(sessionId) },
-      { $set: setStatus },
-      { arrayFilters: [{ $or: socketIdsFilter }] }
+      { $pull: { "parsed.line_items.$[match].checkedBy": socketId } },
+      { arrayFilters: [{ $or: [{ "match.checkedBy": { $in: [socketId] } }] }] }
     );
 
     return result;

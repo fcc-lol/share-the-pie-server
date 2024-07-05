@@ -44,7 +44,10 @@ function generateDataString(parsedReceipt) {
 
 let key, cert, ca;
 
-if (process.env.SERVER_IP === "localhost") {
+if (
+  process.env.SERVER_IP === "localhost" ||
+  process.env.SERVER_IP === "leo.local"
+) {
   key = fs.readFileSync(process.env.LOCAL_KEY);
   cert = fs.readFileSync(process.env.LOCAL_CERT);
 } else {
@@ -91,7 +94,6 @@ app.post("/getReceiptData", async (req, res) => {
               description: line_item.description,
               quanity: line_item.quanity,
               price: line_item.total,
-              isChecked: line_item.isChecked,
               checkedBy: line_item.checkedBy,
               isPaid: line_item.isPaid,
               paidBy: line_item.paidBy,
@@ -137,10 +139,7 @@ app.post("/parseReceiptImage", async (req, res) => {
     if (dataStorageMode === "DATABASE") {
       parsedReceipt.line_items = parsedReceipt.line_items.map((line_item) => ({
         ...line_item,
-        isChecked: false,
-        checkedBy: null,
-        isPaid: false,
-        paidBy: null,
+        checkedBy: [],
       }));
 
       const insertedId = await saveToDatabase({

@@ -8,14 +8,17 @@ import https from "https";
 import { getSessionMembersData } from "./functions/session.js";
 import {
   setItemStatusesByItemId,
-  setItemStatusesBySocketId,
+  clearItemsCheckedBySocketId,
 } from "./functions/database.js";
 
 dotenv.config();
 
 let key, cert, ca;
 
-if (process.env.SERVER_IP === "localhost") {
+if (
+  process.env.SERVER_IP === "localhost" ||
+  process.env.SERVER_IP === "leo.local"
+) {
   key = fs.readFileSync(process.env.LOCAL_KEY);
   cert = fs.readFileSync(process.env.LOCAL_CERT);
 } else {
@@ -90,10 +93,7 @@ io.on("connection", (socket) => {
         { removeDisconnectingSocket: true }
       );
 
-      setItemStatusesBySocketId(sessionId, socket.id, {
-        isChecked: false,
-        checkedBy: null,
-      });
+      clearItemsCheckedBySocketId(sessionId, socket.id);
 
       io.to(sessionId).emit("sessionMembersChanged", {
         sessionMembers: sessionMembersData,
@@ -107,13 +107,11 @@ io.on("connection", (socket) => {
 
     io.to(sessionId).emit("itemsStatusChanged", {
       itemId,
-      isChecked: true,
-      checkedBy: socketId,
+      checkedBy: [socketId],
     });
 
     setItemStatusesByItemId(sessionId, itemId, {
-      isChecked: true,
-      checkedBy: socketId,
+      checkedBy: [socketId],
     });
   });
 
@@ -122,13 +120,11 @@ io.on("connection", (socket) => {
 
     io.to(sessionId).emit("itemsStatusChanged", {
       itemId,
-      isChecked: false,
-      checkedBy: null,
+      checkedBy: [],
     });
 
     setItemStatusesByItemId(sessionId, itemId, {
-      isChecked: false,
-      checkedBy: null,
+      checkedBy: [],
     });
   });
 
