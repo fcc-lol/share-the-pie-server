@@ -41,6 +41,10 @@ const server = https.createServer({ key, cert, ca }, app);
 
 const io = new Server(server, {
   maxHttpBufferSize: 1e8,
+  cleanupEmptyChildNamespaces: true,
+  connectionStateRecovery: {
+    maxDisconnectionDuration: 2 * 60 * 1000,
+  },
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
