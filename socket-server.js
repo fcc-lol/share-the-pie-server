@@ -128,14 +128,6 @@ io.on("connection", (socket) => {
     });
   });
 
-  // socket.on('setItemsPaid', async (data) => {
-  //   const { sessionId, itemIds } = data
-
-  //   const result = await setItemStatuses(sessionId, itemIds, { isPaid: true, paidBy: socket.id })
-
-  //   io.to(sessionId).emit('itemsStatusChanged')
-  // })
-
   socket.on("setMemberToBeSessionCreator", async (data) => {
     const { sessionId, itemIds } = data;
 
