@@ -82,8 +82,18 @@ io.on("connection", (socket) => {
     });
   });
 
+  socket.on("sessionMembersChanged", async (data) => {
+    // const { sessionId, memberLeft } = data;
+    // console.log("sessionMembersChanged");
+    // if (memberLeft) {
+    //   console.log("memberLeft", memberLeft);
+    //   // await clearItemsCheckedBySocketId(sessionId, memberLeft);
+    // }
+  });
+
   socket.on("disconnecting", (reason) => {
     if ([...socket.rooms] && [...socket.rooms][1]) {
+      console.log("disconnecting");
       const sessionId = [...socket.rooms][1].toString();
       const sessionMembersData = getSessionMembersData(
         socket,
@@ -93,9 +103,8 @@ io.on("connection", (socket) => {
         { removeDisconnectingSocket: true }
       );
 
-      clearItemsCheckedBySocketId(sessionId, socket.id);
-
       io.to(sessionId).emit("sessionMembersChanged", {
+        sessionId,
         sessionMembers: sessionMembersData,
         memberLeft: socket.id,
       });
@@ -110,31 +119,31 @@ io.on("connection", (socket) => {
       checkedBy: socketIds,
     });
 
-    setItemStatusesByItemId(sessionId, itemId, {
-      checkedBy: socketIds,
-    });
+    // setItemStatusesByItemId(sessionId, itemId, {
+    //   checkedBy: socketIds,
+    // });
   });
 
   socket.on("setItemUnchecked", (data) => {
-    const { sessionId, itemId } = data;
+    const { sessionId, itemId, socketIds, mySocketId } = data;
 
     io.to(sessionId).emit("itemsStatusChanged", {
       itemId,
-      checkedBy: [],
+      checkedBy: socketIds.filter((socketId) => socketId !== mySocketId),
     });
 
-    setItemStatusesByItemId(sessionId, itemId, {
-      checkedBy: [],
-    });
+    // setItemStatusesByItemId(sessionId, itemId, {
+    //   checkedBy: socketIds.filter((socketId) => socketId !== mySocketId),
+    // });
   });
 
   socket.on("setMemberToBeSessionCreator", async (data) => {
     const { sessionId, itemIds } = data;
 
-    await setItemStatuses(sessionId, itemIds, {
-      isPaid: true,
-      paidBy: socket.id,
-    });
+    // await setItemStatuses(sessionId, itemIds, {
+    //   isPaid: true,
+    //   paidBy: socket.id,
+    // });
 
     io.to(sessionId).emit("itemsStatusChanged");
   });
