@@ -103,15 +103,15 @@ io.on("connection", (socket) => {
   });
 
   socket.on("setItemChecked", (data) => {
-    const { sessionId, itemId, socketId } = data;
+    const { sessionId, itemId, socketIds } = data;
 
     io.to(sessionId).emit("itemsStatusChanged", {
       itemId,
-      checkedBy: [socketId],
+      checkedBy: socketIds,
     });
 
     setItemStatusesByItemId(sessionId, itemId, {
-      checkedBy: [socketId],
+      checkedBy: socketIds,
     });
   });
 
