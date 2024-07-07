@@ -2,8 +2,7 @@ import express from "express";
 import { Server } from "socket.io";
 import cors from "cors";
 import dotenv from "dotenv";
-import QRCode from "qrcode";
-import fs, { readFileSync } from "fs";
+import fs from "fs";
 import https from "https";
 import { getSessionMembersData } from "./functions/session.js";
 import {
@@ -86,15 +85,6 @@ io.on("connection", (socket) => {
     });
   });
 
-  socket.on("sessionMembersChanged", async (data) => {
-    // const { sessionId, memberLeft } = data;
-    // console.log("sessionMembersChanged");
-    // if (memberLeft) {
-    //   console.log("memberLeft", memberLeft);
-    //   // await clearItemsCheckedBySocketId(sessionId, memberLeft);
-    // }
-  });
-
   socket.on("disconnecting", (reason) => {
     if ([...socket.rooms] && [...socket.rooms][1]) {
       console.log("disconnecting");
@@ -106,6 +96,8 @@ io.on("connection", (socket) => {
         joinedFromList,
         { removeDisconnectingSocket: true }
       );
+
+      clearItemsCheckedBySocketId(sessionId, socket.id);
 
       io.to(sessionId).emit("sessionMembersChanged", {
         sessionId,
@@ -123,9 +115,9 @@ io.on("connection", (socket) => {
       checkedBy: socketIds,
     });
 
-    // setItemStatusesByItemId(sessionId, itemId, {
-    //   checkedBy: socketIds,
-    // });
+    setItemStatusesByItemId(sessionId, itemId, {
+      checkedBy: socketIds,
+    });
   });
 
   socket.on("setItemUnchecked", (data) => {
@@ -136,9 +128,9 @@ io.on("connection", (socket) => {
       checkedBy: socketIds.filter((socketId) => socketId !== mySocketId),
     });
 
-    // setItemStatusesByItemId(sessionId, itemId, {
-    //   checkedBy: socketIds.filter((socketId) => socketId !== mySocketId),
-    // });
+    setItemStatusesByItemId(sessionId, itemId, {
+      checkedBy: socketIds.filter((socketId) => socketId !== mySocketId),
+    });
   });
 
   socket.on("setMemberToBeSessionCreator", async (data) => {
