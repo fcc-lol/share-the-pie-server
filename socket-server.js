@@ -133,17 +133,6 @@ io.on("connection", (socket) => {
     });
   });
 
-  socket.on("setMemberToBeSessionCreator", async (data) => {
-    const { sessionId, itemIds } = data;
-
-    // await setItemStatuses(sessionId, itemIds, {
-    //   isPaid: true,
-    //   paidBy: socket.id,
-    // });
-
-    io.to(sessionId).emit("itemsStatusChanged");
-  });
-
   socket.on("tipAmountChanged", (data) => {
     const { sessionId, tip } = data;
 
