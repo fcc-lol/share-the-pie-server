@@ -8,6 +8,7 @@ import { getSessionMembersData } from "./functions/session.js";
 import {
   setItemStatusesByItemId,
   clearItemsCheckedBySocketId,
+  cleanUpAllCheckedBy,
 } from "./functions/database.js";
 
 dotenv.config();
@@ -80,6 +81,8 @@ io.on("connection", (socket) => {
       joinedFromList
     );
 
+    cleanUpAllCheckedBy(sessionId, sessionMembersData);
+
     io.to(sessionId).emit("sessionMembersChanged", {
       sessionMembers: sessionMembersData,
     });
@@ -98,6 +101,8 @@ io.on("connection", (socket) => {
       );
 
       clearItemsCheckedBySocketId(sessionId, socket.id);
+
+      cleanUpAllCheckedBy(sessionId, sessionMembersData);
 
       io.to(sessionId).emit("sessionMembersChanged", {
         sessionId,
