@@ -111,13 +111,15 @@ export async function clearItemsCheckedBySocketId(sessionId, socketId) {
 export async function cleanUpAllCheckedBy(sessionId, sessionMembersData) {
   const receiptData = await readFromDatabase(sessionId);
 
-  receiptData.parsed.line_items.map((item) => {
-    item.checkedBy.map((socketId) => {
-      if (!sessionMembersData.some((member) => member.id === socketId)) {
-        clearItemsCheckedBySocketId(sessionId, socketId);
-      }
+  if (receiptData && receiptData.parsed && receiptData.parsed.line_items) {
+    receiptData.parsed.line_items.map((item) => {
+      item.checkedBy.map((socketId) => {
+        if (!sessionMembersData.some((member) => member.id === socketId)) {
+          clearItemsCheckedBySocketId(sessionId, socketId);
+        }
+      });
     });
-  });
+  }
 }
 
 export async function setInitiatorData(data) {
