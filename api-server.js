@@ -92,7 +92,7 @@ app.post("/getReceiptData", async (req, res) => {
             return {
               id: line_item.id,
               description: line_item.description,
-              quanity: line_item.quanity,
+              quantity: line_item.quantity,
               price: line_item.total,
               checkedBy: line_item.checkedBy,
               isPaid: line_item.isPaid,
