@@ -8,7 +8,7 @@ import { getSessionMembersData } from "./functions/session.js";
 import {
   setItemStatusesByItemId,
   clearItemsCheckedBySocketId,
-  cleanUpAllCheckedBy,
+  cleanUpAllCheckedBy
 } from "./functions/database.js";
 
 dotenv.config();
@@ -21,19 +21,6 @@ if (
 ) {
   key = fs.readFileSync(process.env.LOCAL_KEY);
   cert = fs.readFileSync(process.env.LOCAL_CERT);
-} else {
-  key = fs.readFileSync(
-    `/etc/letsencrypt/live/${process.env.DOMAIN_NAME}/privkey.pem`,
-    "utf8"
-  );
-  cert = fs.readFileSync(
-    `/etc/letsencrypt/live/${process.env.DOMAIN_NAME}/cert.pem`,
-    "utf8"
-  );
-  ca = fs.readFileSync(
-    `/etc/letsencrypt/live/${process.env.DOMAIN_NAME}/chain.pem`,
-    "utf8"
-  );
 }
 
 const app = express();
@@ -43,12 +30,12 @@ const io = new Server(server, {
   maxHttpBufferSize: 1e8,
   cleanupEmptyChildNamespaces: true,
   connectionStateRecovery: {
-    maxDisconnectionDuration: 2 * 60 * 1000,
+    maxDisconnectionDuration: 2 * 60 * 1000
   },
   cors: {
     origin: "*",
-    methods: ["GET", "POST"],
-  },
+    methods: ["GET", "POST"]
+  }
 });
 
 app.use(cors());
@@ -84,7 +71,7 @@ io.on("connection", (socket) => {
     cleanUpAllCheckedBy(sessionId, sessionMembersData);
 
     io.to(sessionId).emit("sessionMembersChanged", {
-      sessionMembers: sessionMembersData,
+      sessionMembers: sessionMembersData
     });
   });
 
@@ -107,7 +94,7 @@ io.on("connection", (socket) => {
       io.to(sessionId).emit("sessionMembersChanged", {
         sessionId,
         sessionMembers: sessionMembersData,
-        memberLeft: socket.id,
+        memberLeft: socket.id
       });
     }
   });
@@ -117,11 +104,11 @@ io.on("connection", (socket) => {
 
     io.to(sessionId).emit("itemsStatusChanged", {
       itemId,
-      checkedBy: socketIds,
+      checkedBy: socketIds
     });
 
     setItemStatusesByItemId(sessionId, itemId, {
-      checkedBy: socketIds,
+      checkedBy: socketIds
     });
   });
 
@@ -130,11 +117,11 @@ io.on("connection", (socket) => {
 
     io.to(sessionId).emit("itemsStatusChanged", {
       itemId,
-      checkedBy: socketIds.filter((socketId) => socketId !== mySocketId),
+      checkedBy: socketIds.filter((socketId) => socketId !== mySocketId)
     });
 
     setItemStatusesByItemId(sessionId, itemId, {
-      checkedBy: socketIds.filter((socketId) => socketId !== mySocketId),
+      checkedBy: socketIds.filter((socketId) => socketId !== mySocketId)
     });
   });
 

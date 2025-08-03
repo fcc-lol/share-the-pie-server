@@ -1,5 +1,5 @@
 {
-  "name": "split-email-parser",
+  "name": "share-the-pie-server",
   "version": "1.0.0",
   "description": "",
   "main": "email-server.js",
@@ -11,10 +11,9 @@
   },
   "scripts": {
     "email-dev": "sudo node ../share-the-pie-server/email-server.js",
-    "api-prod": "node ../share-the-pie-server/api-server.js",
     "api-dev": "nodemon ../share-the-pie-server/api-server.js",
-    "socket-prod": "node ../share-the-pie-server/socket-server.js",
-    "socket-dev": "nodemon ../share-the-pie-server/socket-server.js"
+    "socket-dev": "nodemon ../share-the-pie-server/socket-server.js",
+    "start": "node /home/fcc/services/share-the-pie-server/api-server.js && node /home/fcc/services/share-the-pie-server/socket-server.js"
   },
   "type": "module",
   "dependencies": {

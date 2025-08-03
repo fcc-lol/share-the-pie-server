@@ -141,8 +141,8 @@ export async function setInitiatorData(data) {
         $set: {
           "initiator.cashTag": data.cashTag,
           "initiator.venmoHandle": data.venmoHandle,
-          "initiator.humanName": data.humanName,
-        },
+          "initiator.humanName": data.humanName
+        }
       }
     );
   } catch (err) {
@@ -170,8 +170,8 @@ export async function setTipAmount(data) {
       {
         $set: {
           "parsed.tip": data.tip,
-          isManualTipAmount: true,
-        },
+          isManualTipAmount: true
+        }
       }
     );
   } catch (err) {

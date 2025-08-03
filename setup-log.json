@@ -1,0 +1,9 @@
+{
+  "service_id": "share-the-pie-server",
+  "service_name": "Share the Pie Server",
+  "domain": "https://share-the-pie-server.fcc.lol",
+  "host": "localhost",
+  "port": "3100",
+  "author": "fcc",
+  "created_on": "Sun Aug  3 08:59:23 UTC 2025"
+}

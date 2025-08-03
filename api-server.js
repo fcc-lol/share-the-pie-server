@@ -13,7 +13,7 @@ import {
   readFromDatabase,
   saveToDatabase,
   setInitiatorData,
-  setTipAmount,
+  setTipAmount
 } from "./functions/database.js";
 import { parseWithGPT, parseWithVeryfi } from "./functions/parse-receipt.js";
 
@@ -50,19 +50,6 @@ if (
 ) {
   key = fs.readFileSync(process.env.LOCAL_KEY);
   cert = fs.readFileSync(process.env.LOCAL_CERT);
-} else {
-  key = fs.readFileSync(
-    `/etc/letsencrypt/live/${process.env.DOMAIN_NAME}/privkey.pem`,
-    "utf8"
-  );
-  cert = fs.readFileSync(
-    `/etc/letsencrypt/live/${process.env.DOMAIN_NAME}/cert.pem`,
-    "utf8"
-  );
-  ca = fs.readFileSync(
-    `/etc/letsencrypt/live/${process.env.DOMAIN_NAME}/chain.pem`,
-    "utf8"
-  );
 }
 
 const app = express();
@@ -84,7 +71,7 @@ app.post("/getReceiptData", async (req, res) => {
       merchant: {
         name: data.parsed.vendor.name,
         type: data.parsed.vendor.type,
-        address: data.parsed.vendor.address,
+        address: data.parsed.vendor.address
       },
       items: data.parsed.line_items
         .map((line_item) => {
@@ -96,7 +83,7 @@ app.post("/getReceiptData", async (req, res) => {
               price: line_item.total,
               checkedBy: line_item.checkedBy,
               isPaid: line_item.isPaid,
-              paidBy: line_item.paidBy,
+              paidBy: line_item.paidBy
             };
           }
         })
@@ -105,10 +92,10 @@ app.post("/getReceiptData", async (req, res) => {
         items: data.parsed.subtotal,
         tip: data.parsed.tip,
         tax: data.parsed.tax,
-        total: data.parsed.total,
+        total: data.parsed.total
       },
       initiator: data.initiator,
-      isManualTipAmount: data.isManualTipAmount,
+      isManualTipAmount: data.isManualTipAmount
     });
   } else {
     res.sendStatus(404);
@@ -139,7 +126,7 @@ app.post("/parseReceiptImage", async (req, res) => {
     if (dataStorageMode === "DATABASE") {
       parsedReceipt.line_items = parsedReceipt.line_items.map((line_item) => ({
         ...line_item,
-        checkedBy: [],
+        checkedBy: []
       }));
 
       const insertedId = await saveToDatabase({
@@ -148,13 +135,13 @@ app.post("/parseReceiptImage", async (req, res) => {
         initiator: {
           cashTag: "",
           venmoHandle: "",
-          humanName: "",
+          humanName: ""
         },
-        isManualTipAmount: false,
+        isManualTipAmount: false
       }).catch(console.dir);
 
       res.send({
-        sessionId: insertedId,
+        sessionId: insertedId
       });
     } else if (dataStorageMode === "URL") {
       const dataString = generateDataString(parsedReceipt);
@@ -164,7 +151,7 @@ app.post("/parseReceiptImage", async (req, res) => {
 
       res.send({
         url,
-        qr,
+        qr
       });
     }
   } else {
@@ -214,7 +201,7 @@ app.post("/generateQrCode", async (req, res) => {
 
     res.send({
       url,
-      qrCode,
+      qrCode
     });
   } else {
     res.sendStatus(404);
