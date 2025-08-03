@@ -1,12 +1,10 @@
 import express from "express";
-import { MongoClient, ObjectId } from "mongodb";
-import OpenAI from "openai";
 import dotenv from "dotenv";
 import cors from "cors";
-import fetch from "node-fetch";
 import bodyParser from "body-parser";
 import fs, { readFileSync } from "fs";
 import https from "https";
+import http from "http";
 import QRCode from "qrcode";
 
 import {
@@ -42,18 +40,24 @@ function generateDataString(parsedReceipt) {
   return dataString;
 }
 
-let key, cert, ca;
-
-if (
-  process.env.SERVER_IP === "localhost" ||
-  process.env.SERVER_IP === "leo.local"
-) {
-  key = fs.readFileSync(process.env.LOCAL_KEY);
-  cert = fs.readFileSync(process.env.LOCAL_CERT);
-}
-
 const app = express();
-const server = https.createServer({ key, cert, ca }, app);
+
+// Determine if we're running locally
+const isLocal =
+  process.env.SERVER_IP === "localhost" ||
+  process.env.SERVER_IP === "leo.local";
+
+let server;
+
+if (isLocal) {
+  // Use HTTPS for local development
+  const key = fs.readFileSync(process.env.LOCAL_KEY);
+  const cert = fs.readFileSync(process.env.LOCAL_CERT);
+  server = https.createServer({ key, cert }, app);
+} else {
+  // Use HTTP for production
+  server = http.createServer(app);
+}
 
 app.use(bodyParser.json({ limit: "10000kb" }));
 app.use(cors());
