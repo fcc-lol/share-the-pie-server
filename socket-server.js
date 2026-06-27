@@ -7,9 +7,15 @@ import https from "https";
 import http from "http";
 import { getSessionMembersData } from "./functions/session.js";
 import {
-  setItemStatusesByItemId,
+  addItemCheckedBy,
+  addItemsCheckedBy,
+  removeItemCheckedBy,
   clearItemsCheckedBySocketId,
-  cleanUpAllCheckedBy
+  cleanUpAllCheckedBy,
+  setSessionCreator,
+  addSessionMember,
+  removeSessionMember,
+  getSessionState
 } from "./functions/database.js";
 
 dotenv.config();
@@ -47,8 +53,28 @@ const io = new Server(server, {
 
 app.use(cors());
 
+// In-RAM caches, mirrored to the receipt doc so they survive a restart. After
+// a restart these start empty and are lazily rehydrated from the DB the first
+// time a session is touched; reconnecting clients re-announce themselves (see
+// the client's reconnect handlers), refreshing the maps with their new ids.
 const sessionCreators = {};
 const joinedFromList = {};
+
+async function ensureSessionLoaded(sessionId) {
+  if (sessionCreators[sessionId] !== undefined) return;
+
+  const state = await getSessionState(sessionId);
+  if (!state) return;
+
+  if (state.creatorSocketId) {
+    sessionCreators[sessionId] = state.creatorSocketId;
+  }
+  if (state.members) {
+    for (const [socketId, info] of Object.entries(state.members)) {
+      joinedFromList[socketId] = info.joinedFrom;
+    }
+  }
+}
 
 io.on("connection", (socket) => {
   socket.on("startSession", async (data) => {
@@ -58,6 +84,9 @@ io.on("connection", (socket) => {
     io.to(sessionId).emit("sessionStarted", { sessionId });
 
     sessionCreators[sessionId] = socket.id;
+    await setSessionCreator(sessionId, socket.id).catch((err) =>
+      console.log(err.stack)
+    );
   });
 
   socket.on("newConnection", async (data) => {
@@ -66,7 +95,12 @@ io.on("connection", (socket) => {
     console.log(`Joining room ${sessionId} from ${joinedFrom}`);
     socket.join(sessionId);
 
+    await ensureSessionLoaded(sessionId);
+
     joinedFromList[socket.id] = joinedFrom;
+    await addSessionMember(sessionId, socket.id, joinedFrom).catch((err) =>
+      console.log(err.stack)
+    );
 
     const sessionMembersData = getSessionMembersData(
       socket,
@@ -75,14 +109,14 @@ io.on("connection", (socket) => {
       joinedFromList
     );
 
-    cleanUpAllCheckedBy(sessionId, sessionMembersData);
+    await cleanUpAllCheckedBy(sessionId, sessionMembersData);
 
     io.to(sessionId).emit("sessionMembersChanged", {
       sessionMembers: sessionMembersData
     });
   });
 
-  socket.on("disconnecting", (reason) => {
+  socket.on("disconnecting", async (reason) => {
     if ([...socket.rooms] && [...socket.rooms][1]) {
       console.log("disconnecting");
       const sessionId = [...socket.rooms][1].toString();
@@ -94,9 +128,14 @@ io.on("connection", (socket) => {
         { removeDisconnectingSocket: true }
       );
 
-      clearItemsCheckedBySocketId(sessionId, socket.id);
+      await clearItemsCheckedBySocketId(sessionId, socket.id);
 
-      cleanUpAllCheckedBy(sessionId, sessionMembersData);
+      delete joinedFromList[socket.id];
+      await removeSessionMember(sessionId, socket.id).catch((err) =>
+        console.log(err.stack)
+      );
+
+      await cleanUpAllCheckedBy(sessionId, sessionMembersData);
 
       io.to(sessionId).emit("sessionMembersChanged", {
         sessionId,
@@ -106,30 +145,45 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("setItemChecked", (data) => {
-    const { sessionId, itemId, socketIds } = data;
+  // Write first, then broadcast the authoritative array the DB returns. The
+  // member's identity is this connection's socket.id — never trust a client
+  // supplied array, which is what allowed concurrent clicks to clobber.
+  socket.on("setItemChecked", async (data) => {
+    const { sessionId, itemId } = data;
 
-    io.to(sessionId).emit("itemsStatusChanged", {
-      itemId,
-      checkedBy: socketIds
-    });
-
-    setItemStatusesByItemId(sessionId, itemId, {
-      checkedBy: socketIds
-    });
+    try {
+      const checkedBy = await addItemCheckedBy(sessionId, itemId, socket.id);
+      io.to(sessionId).emit("itemsStatusChanged", { itemId, checkedBy });
+    } catch (err) {
+      console.log(err.stack);
+      socket.emit("itemActionFailed", { itemId, action: "check" });
+    }
   });
 
-  socket.on("setItemUnchecked", (data) => {
-    const { sessionId, itemId, socketIds, mySocketId } = data;
+  socket.on("setItemsChecked", async (data) => {
+    const { sessionId, itemIds } = data;
 
-    io.to(sessionId).emit("itemsStatusChanged", {
-      itemId,
-      checkedBy: socketIds.filter((socketId) => socketId !== mySocketId)
-    });
+    try {
+      const results = await addItemsCheckedBy(sessionId, itemIds, socket.id);
+      results.forEach(({ itemId, checkedBy }) => {
+        io.to(sessionId).emit("itemsStatusChanged", { itemId, checkedBy });
+      });
+    } catch (err) {
+      console.log(err.stack);
+      socket.emit("itemActionFailed", { itemIds, action: "check" });
+    }
+  });
 
-    setItemStatusesByItemId(sessionId, itemId, {
-      checkedBy: socketIds.filter((socketId) => socketId !== mySocketId)
-    });
+  socket.on("setItemUnchecked", async (data) => {
+    const { sessionId, itemId } = data;
+
+    try {
+      const checkedBy = await removeItemCheckedBy(sessionId, itemId, socket.id);
+      io.to(sessionId).emit("itemsStatusChanged", { itemId, checkedBy });
+    } catch (err) {
+      console.log(err.stack);
+      socket.emit("itemActionFailed", { itemId, action: "uncheck" });
+    }
   });
 
   socket.on("tipAmountChanged", (data) => {
