@@ -14,7 +14,6 @@ import {
   setTipAmount
 } from "./functions/database.js";
 import {
-  parseWithGPT,
   parseWithVeryfi,
   parseWithClaude
 } from "./functions/parse-receipt.js";
@@ -120,14 +119,12 @@ app.post("/parseReceiptImage", async (req, res) => {
 
   // The client may pick a parsing mode per request (see the settings menu on
   // capture-receipt); fall back to the server default when it's absent/invalid.
-  const validModes = ["GPT", "VERYFI", "SAMPLE", "CLAUDE"];
+  const validModes = ["VERYFI", "SAMPLE", "CLAUDE"];
   const receiptParsingMode = validModes.includes(req.body.parsingMode)
     ? req.body.parsingMode
     : process.env.RECEIPT_PARSING_MODE;
 
-  if (receiptParsingMode === "GPT") {
-    parsedReceipt = await parseWithGPT(imageData);
-  } else if (receiptParsingMode === "VERYFI") {
+  if (receiptParsingMode === "VERYFI") {
     parsedReceipt = await parseWithVeryfi(imageData);
   } else if (receiptParsingMode === "CLAUDE") {
     parsedReceipt = await parseWithClaude(imageData);

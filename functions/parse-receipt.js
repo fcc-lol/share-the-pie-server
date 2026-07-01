@@ -1,5 +1,4 @@
 import Anthropic from "@anthropic-ai/sdk";
-import OpenAI from "openai";
 
 // JSON schema for structured output — mirrors the fields the rest of the app
 // consumes from a parsed receipt (same shape Veryfi returns). Line item `id`s
@@ -85,54 +84,6 @@ export async function parseWithClaude(image) {
     if (!textBlock) return undefined;
 
     const parsed = JSON.parse(textBlock.text);
-    parsed.line_items = (parsed.line_items || []).map((item, index) => ({
-      ...item,
-      id: index
-    }));
-
-    return parsed;
-  } catch (error) {
-    console.error("Error:", error);
-    return undefined;
-  }
-}
-
-export async function parseWithGPT(image) {
-  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-  try {
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
-      response_format: { type: "json_object" },
-      messages: [
-        {
-          role: "system",
-          content:
-            "You extract structured data from receipt images and output JSON."
-        },
-        {
-          role: "user",
-          content: [
-            {
-              type: "text",
-              text: `Extract this receipt as JSON with exactly this shape:
-{
-  "vendor": { "name": string, "type": string, "address": string },
-  "line_items": [ { "description": string, "quantity": number, "total": number } ],
-  "subtotal": number,
-  "tax": number,
-  "tip": number,
-  "total": number
-}
-Include every purchased line item with its description, quantity, and total price; exclude items with zero, missing, or blank price. subtotal + tax + tip must equal total. Respond with only the JSON object.`
-            },
-            { type: "image_url", image_url: { url: image } }
-          ]
-        }
-      ]
-    });
-
-    const parsed = JSON.parse(completion.choices[0].message.content);
     parsed.line_items = (parsed.line_items || []).map((item, index) => ({
       ...item,
       id: index
