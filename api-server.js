@@ -13,7 +13,11 @@ import {
   setInitiatorData,
   setTipAmount
 } from "./functions/database.js";
-import { parseWithGPT, parseWithVeryfi } from "./functions/parse-receipt.js";
+import {
+  parseWithGPT,
+  parseWithVeryfi,
+  parseWithClaude
+} from "./functions/parse-receipt.js";
 
 dotenv.config();
 
@@ -113,12 +117,20 @@ app.get("/status", async (req, res) => {
 app.post("/parseReceiptImage", async (req, res) => {
   let imageData = req.body.image;
   let parsedReceipt;
-  const receiptParsingMode = process.env.RECEIPT_PARSING_MODE;
+
+  // The client may pick a parsing mode per request (see the settings menu on
+  // capture-receipt); fall back to the server default when it's absent/invalid.
+  const validModes = ["GPT", "VERYFI", "SAMPLE", "CLAUDE"];
+  const receiptParsingMode = validModes.includes(req.body.parsingMode)
+    ? req.body.parsingMode
+    : process.env.RECEIPT_PARSING_MODE;
 
   if (receiptParsingMode === "GPT") {
     parsedReceipt = await parseWithGPT(imageData);
   } else if (receiptParsingMode === "VERYFI") {
     parsedReceipt = await parseWithVeryfi(imageData);
+  } else if (receiptParsingMode === "CLAUDE") {
+    parsedReceipt = await parseWithClaude(imageData);
   } else if (receiptParsingMode === "SAMPLE") {
     const sampleData = readFileSync("./samples/pusu.json");
     parsedReceipt = JSON.parse(sampleData);
