@@ -85,6 +85,30 @@ export async function addItemsCheckedBy(sessionId, itemIds, socketId) {
   }));
 }
 
+// Move one connection's checks to a new socket id (used on reconnect so a
+// member's selections survive a disconnect without duplicating).
+export async function migrateCheckedBy(sessionId, fromSocketId, toSocketId) {
+  if (!fromSocketId || fromSocketId === toSocketId) return [];
+
+  const receiptData = await readFromDatabase(sessionId);
+  if (!receiptData || !receiptData.parsed || !receiptData.parsed.line_items) {
+    return [];
+  }
+
+  const affected = receiptData.parsed.line_items.filter(
+    (item) =>
+      Array.isArray(item.checkedBy) && item.checkedBy.includes(fromSocketId)
+  );
+
+  const results = [];
+  for (const item of affected) {
+    await removeItemCheckedBy(sessionId, item.id, fromSocketId);
+    const checkedBy = await addItemCheckedBy(sessionId, item.id, toSocketId);
+    results.push({ itemId: item.id, checkedBy });
+  }
+  return results;
+}
+
 export async function clearItemsCheckedBySocketId(sessionId, socketId) {
   const collection = await getCollection();
   return collection.updateOne(

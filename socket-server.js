@@ -10,8 +10,7 @@ import {
   addItemCheckedBy,
   addItemsCheckedBy,
   removeItemCheckedBy,
-  clearItemsCheckedBySocketId,
-  cleanUpAllCheckedBy,
+  migrateCheckedBy,
   setSessionCreator,
   addSessionMember,
   removeSessionMember,
@@ -110,8 +109,6 @@ io.on("connection", (socket) => {
       joinedFromList
     );
 
-    await cleanUpAllCheckedBy(sessionId, sessionMembersData);
-
     io.to(sessionId).emit("sessionMembersChanged", {
       sessionMembers: sessionMembersData
     });
@@ -129,20 +126,37 @@ io.on("connection", (socket) => {
         { removeDisconnectingSocket: true }
       );
 
-      await clearItemsCheckedBySocketId(sessionId, socket.id);
-
+      // Keep this member's item selections. Leaving (e.g. to pay in Venmo)
+      // must not change everyone else's split; they reclaim their items on
+      // reconnect via migrateCheckedBy.
       delete joinedFromList[socket.id];
       await removeSessionMember(sessionId, socket.id).catch((err) =>
         console.log(err.stack)
       );
 
-      await cleanUpAllCheckedBy(sessionId, sessionMembersData);
-
       io.to(sessionId).emit("sessionMembersChanged", {
         sessionId,
-        sessionMembers: sessionMembersData,
-        memberLeft: socket.id
+        sessionMembers: sessionMembersData
       });
+    }
+  });
+
+  // On reconnect the client sends its previous socket id so we move that
+  // connection's checks onto the new one — no duplication, no lost totals.
+  socket.on("reclaimItems", async (data) => {
+    const { sessionId, previousSocketId } = data;
+
+    try {
+      const results = await migrateCheckedBy(
+        sessionId,
+        previousSocketId,
+        socket.id
+      );
+      results.forEach(({ itemId, checkedBy }) => {
+        io.to(sessionId).emit("itemsStatusChanged", { itemId, checkedBy });
+      });
+    } catch (err) {
+      console.log(err.stack);
     }
   });
 
