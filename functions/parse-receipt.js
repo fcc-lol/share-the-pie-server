@@ -68,7 +68,7 @@ export async function parseWithClaude(image) {
             },
             {
               type: "text",
-              text: "Extract this receipt into the required JSON structure. Include the merchant's name, type, and address; every purchased line item with its description, quantity, and total price (exclude items with zero, missing, or blank price); and the subtotal, tax, tip, and grand total shown on the receipt, where subtotal + tax + tip equals the grand total."
+              text: "Extract this receipt into the required JSON structure. Include the merchant's name, type, and address; every purchased line item with its description, quantity, and total price (exclude items with zero, missing, or blank price); and the subtotal, tax, tip, and grand total. For the tip specifically, look carefully for a handwritten amount written in on a tip line, or a suggested-tip option that has been circled, checked, ticked, or marked with a pen — if the customer wrote in or selected a tip that way, use that exact dollar amount as the tip. If no tip is written or marked, use 0. Prefer subtotal + tax + tip equal to the grand total, but if a handwritten/marked tip makes them differ, keep the tip you found."
             }
           ]
         }
