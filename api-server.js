@@ -145,7 +145,7 @@ app.post("/parseReceiptImage", async (req, res) => {
 
       const insertedId = await saveToDatabase({
         parsed: parsedReceipt,
-        original: imageData,
+        original: imageData || null,
         initiator: {
           cashTag: "",
           venmoHandle: "",
