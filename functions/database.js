@@ -142,6 +142,14 @@ export async function setTipAmount(data) {
   );
 }
 
+export async function setTotalsLocked(sessionId, locked) {
+  const collection = await getCollection();
+  return collection.updateOne(
+    { _id: new ObjectId(sessionId) },
+    { $set: { isLocked: locked } }
+  );
+}
+
 // --- Session state persistence -------------------------------------------
 // Mirrors the volatile in-RAM creator/member maps onto the receipt doc so a
 // server restart doesn't orphan a session. Members are keyed by socket.id

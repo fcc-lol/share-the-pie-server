@@ -102,7 +102,8 @@ app.post("/getReceiptData", async (req, res) => {
         total: data.parsed.total
       },
       initiator: data.initiator,
-      isManualTipAmount: data.isManualTipAmount
+      isManualTipAmount: data.isManualTipAmount,
+      isLocked: data.isLocked || false
     });
   } else {
     res.sendStatus(404);

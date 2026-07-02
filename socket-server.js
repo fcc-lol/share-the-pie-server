@@ -15,7 +15,8 @@ import {
   setSessionCreator,
   addSessionMember,
   removeSessionMember,
-  getSessionState
+  getSessionState,
+  setTotalsLocked
 } from "./functions/database.js";
 
 dotenv.config();
@@ -190,6 +191,19 @@ io.on("connection", (socket) => {
     const { sessionId, tip } = data;
 
     io.to(sessionId).emit("tipAmountChanged", { sessionId, tip });
+  });
+
+  // Payer locks/unlocks the totals: freezes item editing for everyone and
+  // reveals the payment buttons on the participant screens.
+  socket.on("setTotalsLocked", async (data) => {
+    const { sessionId, locked } = data;
+
+    try {
+      await setTotalsLocked(sessionId, locked);
+      io.to(sessionId).emit("totalsLocked", { locked });
+    } catch (err) {
+      console.log(err.stack);
+    }
   });
 });
 
